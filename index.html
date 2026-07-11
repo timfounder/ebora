@@ -95,9 +95,9 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 .media{
   position:relative;aspect-ratio:1/1;
   display:flex;align-items:center;justify-content:center;
-  overflow:hidden;
+  overflow:hidden;background:#fff;
 }
-.media img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;z-index:1;background:#fff}
+.media img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;object-position:center;display:block;z-index:1;padding:8px}
 .media .ph{width:100%;height:100%;position:absolute;inset:0;z-index:0}
 .media .tag{
   position:absolute;top:10px;left:10px;z-index:2;
@@ -144,7 +144,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 }
 .fab .txt{font-size:14px;font-weight:600}
 .fab .sum{font-family:'Space Grotesk';font-weight:600;font-size:16px}
-.fab .go{background:#fff;color:var(--ink);border-radius:12px;height:42px;padding:0 16px;font-weight:700;font-size:14px}
+.fab .go{background:#fff;color:var(--ink);border-radius:100px;height:44px;padding:0 20px;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center;letter-spacing:-.01em;white-space:nowrap}
 
 /* ---------- Cart sheet ---------- */
 .scrim{
@@ -167,8 +167,8 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 .items{overflow-y:auto;padding:6px 16px;flex:1}
 .item{display:flex;gap:12px;padding:12px 4px;border-bottom:1px solid var(--line)}
 .item:last-child{border-bottom:none}
-.item .thumb{width:60px;height:60px;border-radius:12px;flex:0 0 auto;overflow:hidden;position:relative}
-.item .thumb img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1;background:#fff}
+.item .thumb{width:60px;height:60px;border-radius:12px;flex:0 0 auto;overflow:hidden;position:relative;background:#fff;border:1px solid var(--line)}
+.item .thumb img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;object-position:center;z-index:1;padding:4px}
 .item .thumb .ph{position:absolute;inset:0;z-index:0}
 .item .info{flex:1;min-width:0}
 .item .info .n{font-size:14px;font-weight:600;line-height:1.25}
