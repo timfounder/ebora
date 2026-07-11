@@ -7,11 +7,21 @@ E-Bora — Telegram bot для запуска mini app.
 Запуск:     python3 bot.py
 Перед запуском впишите TOKEN и WEBAPP_URL ниже.
 """
+import os
+import sys
+
 import telebot
 from telebot import types
 
-TOKEN = "PASTE_BOT_TOKEN_HERE"          # токен из @BotFather
-WEBAPP_URL = "https://USERNAME.github.io/REPO/"  # URL с GitHub Pages (HTTPS обязателен)
+TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN") or os.environ.get("BOT_TOKEN")
+WEBAPP_URL = os.environ.get("WEBAPP_URL", "https://USERNAME.github.io/REPO/")
+
+if not TOKEN or ":" not in TOKEN:
+    sys.exit(
+        "ERROR: Telegram bot token is missing or invalid. "
+        "Set the TELEGRAM_BOT_TOKEN environment variable (from @BotFather) "
+        "in Railway → Variables and redeploy."
+    )
 
 bot = telebot.TeleBot(TOKEN, parse_mode="HTML")
 
