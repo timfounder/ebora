@@ -316,15 +316,6 @@ const PRODUCTS = [
   {id:'hp10',   cat:'Очистители', name:'Dyson Purifier Hot+Cool™ Gen 1 HP10',  spec:{ru:'Очищает, греет и охлаждает',uz:'Tozalaydi, isitadi va sovutadi'},         price:null, image:IMG+'1_hNXEgEh.max-280x280.format-webp.webp'},
 ];
 
-/* иконки-заглушки по категориям (line-art) */
-const ICONS = {
-  'Пылесосы':  '<circle cx="34" cy="20" r="8"/><path d="M27 15h-6a4 4 0 0 0 0 8h5M34 28v27M23 55h23l-3 7H26z"/>',
-  'Фены':      '<path d="M18 26h20l10-8v20l-10-8H18a8 8 0 0 1 0-16v0M28 42v14"/>',
-  'Airwrap':   '<path d="M32 10v10m0 0c-8 0-12 5-12 12s4 12 12 12 12-5 12-12-4-12-12-12Zm0 24v10"/>',
-  'Airstrait': '<path d="M26 10v44M38 10v44M26 10h12M26 54h12"/>',
-  'Corrale':   '<path d="M24 12 20 52m20-40 4 40M24 12h16M20 52h24"/>',
-  'Очистители':'<rect x="22" y="14" width="20" height="36" rx="10"/><path d="M28 56h8M32 22v20"/>'
-};
 /* тонкий цветовой оттенок медиа-области по категории */
 const TINT = {
   'Пылесосы':  ['#f3e9ff','#6a1fb0'],
@@ -390,13 +381,13 @@ function categories(){
   return set;
 }
 function placeholder(cat){
-  const [bg,stroke] = TINT[cat] || ['#eee','#999'];
+  const [bg] = TINT[cat] || ['#eee'];
+  const gid = 'g_'+cat.replace(/\s/g,'');
   return `<svg class="ph" viewBox="0 0 64 64" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
-    <defs><radialGradient id="g_${cat.replace(/\s/g,'')}" cx="50%" cy="38%" r="70%">
+    <defs><radialGradient id="${gid}" cx="50%" cy="38%" r="70%">
       <stop offset="0%" stop-color="${bg}"/><stop offset="100%" stop-color="#ffffff"/>
     </radialGradient></defs>
-    <rect width="64" height="64" fill="url(#g_${cat.replace(/\s/g,'')})"/>
-    <g fill="none" stroke="${stroke}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" opacity=".85">${ICONS[cat]||''}</g>
+    <rect width="64" height="64" fill="url(#${gid})"/>
   </svg>`;
 }
 function imgSrc(p){ return p.image || `images/${p.id}.jpg`; }
