@@ -26,7 +26,11 @@ requirements.txt    — зависимость для bot.py
 
 Вариант Б (кнопка прямо в ответ на /start): запустить `bot.py`.
 1. `pip install -r requirements.txt`
-2. В `bot.py` вписать `TOKEN` (из @BotFather) и `WEBAPP_URL` (из шага 1).
+2. Задать переменные окружения:
+   - `TELEGRAM_BOT_TOKEN` — токен от @BotFather (обязательно);
+   - `WEBAPP_URL` — URL каталога из шага 1 (иначе будет placeholder).
+   На Railway: Project → Variables → New Variable.
+   Локально: `export TELEGRAM_BOT_TOKEN=123:abc` перед запуском.
 3. `python3 bot.py` — держать запущенным на любом сервере
    (Railway / VPS / даже Termux).
 По `/start` бот пришлёт кнопку «🛍 Каталог / Katalog», открывающую
