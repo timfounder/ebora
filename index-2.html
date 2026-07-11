@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>E-Bora — техника Dyson</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   DYSON STORE — Telegram Mini App
+   Всё настраиваемое (менеджер, валюта, товары) — в <script> ниже,
+   в блоке CONFIG и PRODUCTS.
+   ============================================================ */
+:root{
+  --ink:#141417;
+  --ink-2:#5b5b62;
+  --ink-3:#9a9aa2;
+  --bg:#f4f4f6;
+  --surface:#ffffff;
+  --line:#e8e8ec;
+  --magenta:#e0006c;
+  --violet:#6a1fb0;
+  --accent:#e0006c;
+  --grad:linear-gradient(120deg,#e0006c,#8a1bb0);
+  --ok:#1fae5a;
+  --radius:18px;
+  --shadow:0 8px 30px rgba(20,20,23,.08);
+  --shadow-sm:0 3px 12px rgba(20,20,23,.06);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  font-family:'Inter',-apple-system,system-ui,sans-serif;
+  background:var(--bg);
+  color:var(--ink);
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+  padding-bottom:120px;
+}
+button{font-family:inherit;cursor:pointer;border:none;background:none}
+
+/* ---------- Header ---------- */
+.top{
+  position:sticky;top:0;z-index:40;
+  background:rgba(244,244,246,.82);
+  backdrop-filter:saturate(180%) blur(14px);
+  -webkit-backdrop-filter:saturate(180%) blur(14px);
+  border-bottom:1px solid var(--line);
+  padding:calc(env(safe-area-inset-top) + 14px) 16px 12px;
+}
+.brand{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.brand h1{
+  margin:0;font-family:'Space Grotesk',sans-serif;
+  font-weight:700;font-size:20px;letter-spacing:.14em;
+}
+.brand .dot{color:var(--accent)}
+.brand small{
+  display:block;font-family:'Inter';font-weight:500;
+  font-size:10px;letter-spacing:.22em;color:var(--ink-3);
+  text-transform:uppercase;margin-top:2px;
+}
+.lang{display:flex;gap:2px;background:var(--surface);border:1px solid var(--line);border-radius:100px;padding:3px;flex:0 0 auto}
+.lang button{padding:6px 12px;border-radius:100px;font-size:12px;font-weight:700;color:var(--ink-2);letter-spacing:.04em;transition:.15s}
+.lang button.active{background:var(--ink);color:#fff}
+
+/* ---------- Categories ---------- */
+.cats{
+  display:flex;gap:8px;overflow-x:auto;margin-top:14px;
+  padding-bottom:2px;scrollbar-width:none;-ms-overflow-style:none;
+}
+.cats::-webkit-scrollbar{display:none}
+.chip{
+  flex:0 0 auto;padding:9px 15px;border-radius:100px;
+  background:var(--surface);border:1px solid var(--line);
+  font-size:13px;font-weight:600;color:var(--ink-2);
+  white-space:nowrap;transition:.18s;
+}
+.chip.active{background:var(--ink);color:#fff;border-color:var(--ink)}
+
+/* ---------- Grid ---------- */
+.grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:12px;
+  padding:16px;
+}
+.card{
+  background:var(--surface);border-radius:var(--radius);
+  box-shadow:var(--shadow-sm);overflow:hidden;
+  display:flex;flex-direction:column;
+  transition:transform .16s ease, box-shadow .16s ease;
+}
+.card:active{transform:scale(.985)}
+.media{
+  position:relative;aspect-ratio:1/1;
+  display:flex;align-items:center;justify-content:center;
+  overflow:hidden;
+}
+.media img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;z-index:1;background:#fff}
+.media .ph{width:100%;height:100%;position:absolute;inset:0;z-index:0}
+.media .tag{
+  position:absolute;top:10px;left:10px;z-index:2;
+  font-size:9px;font-weight:700;letter-spacing:.14em;
+  text-transform:uppercase;color:#fff;
+  background:rgba(20,20,23,.55);backdrop-filter:blur(6px);
+  padding:5px 9px;border-radius:100px;
+}
+.body{padding:12px 13px 14px;display:flex;flex-direction:column;flex:1}
+.name{font-size:14px;font-weight:600;line-height:1.28;letter-spacing:-.01em}
+.spec{font-size:11px;color:var(--ink-3);margin-top:4px;line-height:1.35;flex:1}
+.row{display:flex;align-items:flex-end;justify-content:space-between;margin-top:12px;gap:8px}
+.price{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:15px;letter-spacing:-.02em;line-height:1.1}
+.price small{display:block;font-family:'Inter';font-weight:500;font-size:10px;color:var(--ink-3);letter-spacing:.02em}
+
+/* add button + stepper */
+.add{
+  flex:0 0 auto;width:38px;height:38px;border-radius:12px;
+  background:var(--ink);color:#fff;display:flex;align-items:center;
+  justify-content:center;font-size:22px;line-height:1;transition:.15s;
+}
+.add:active{transform:scale(.9)}
+.step{
+  display:flex;align-items:center;gap:2px;background:var(--ink);
+  border-radius:12px;height:38px;padding:0 3px;
+}
+.step button{width:32px;height:38px;color:#fff;font-size:20px;display:flex;align-items:center;justify-content:center}
+.step span{min-width:20px;text-align:center;color:#fff;font-weight:700;font-size:14px;font-family:'Space Grotesk'}
+
+/* ---------- Cart FAB ---------- */
+.fab{
+  position:fixed;left:16px;right:16px;bottom:calc(env(safe-area-inset-bottom) + 16px);
+  z-index:50;height:58px;border-radius:16px;background:var(--ink);color:#fff;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 10px 0 20px;box-shadow:var(--shadow);
+  transform:translateY(130%);opacity:0;transition:transform .32s cubic-bezier(.2,.9,.3,1),opacity .25s;
+}
+.fab.show{transform:translateY(0);opacity:1}
+.fab .l{display:flex;align-items:center;gap:12px}
+.fab .badge{
+  min-width:26px;height:26px;border-radius:8px;background:var(--grad);
+  display:flex;align-items:center;justify-content:center;
+  font-weight:700;font-size:13px;font-family:'Space Grotesk';padding:0 6px;
+}
+.fab .txt{font-size:14px;font-weight:600}
+.fab .sum{font-family:'Space Grotesk';font-weight:600;font-size:16px}
+.fab .go{background:#fff;color:var(--ink);border-radius:12px;height:42px;padding:0 16px;font-weight:700;font-size:14px}
+
+/* ---------- Cart sheet ---------- */
+.scrim{
+  position:fixed;inset:0;z-index:60;background:rgba(20,20,23,.4);
+  opacity:0;pointer-events:none;transition:opacity .28s;
+}
+.scrim.open{opacity:1;pointer-events:auto}
+.sheet{
+  position:fixed;left:0;right:0;bottom:0;z-index:61;
+  background:var(--surface);border-radius:22px 22px 0 0;
+  transform:translateY(100%);transition:transform .34s cubic-bezier(.2,.9,.3,1);
+  max-height:88vh;display:flex;flex-direction:column;
+  padding-bottom:calc(env(safe-area-inset-bottom) + 10px);
+}
+.sheet.open{transform:translateY(0)}
+.grab{width:38px;height:4px;border-radius:100px;background:var(--line);margin:10px auto 4px}
+.sheet-head{display:flex;align-items:center;justify-content:space-between;padding:6px 20px 12px;border-bottom:1px solid var(--line)}
+.sheet-head h2{margin:0;font-family:'Space Grotesk';font-weight:700;font-size:19px}
+.sheet-head .clear{font-size:13px;color:var(--ink-3);font-weight:600}
+.items{overflow-y:auto;padding:6px 16px;flex:1}
+.item{display:flex;gap:12px;padding:12px 4px;border-bottom:1px solid var(--line)}
+.item:last-child{border-bottom:none}
+.item .thumb{width:60px;height:60px;border-radius:12px;flex:0 0 auto;overflow:hidden;position:relative}
+.item .thumb img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1;background:#fff}
+.item .thumb .ph{position:absolute;inset:0;z-index:0}
+.item .info{flex:1;min-width:0}
+.item .info .n{font-size:14px;font-weight:600;line-height:1.25}
+.item .info .p{font-family:'Space Grotesk';font-weight:600;font-size:14px;margin-top:4px}
+.item .ctrl{display:flex;flex-direction:column;align-items:flex-end;justify-content:space-between}
+.item .mini{display:flex;align-items:center;gap:2px;background:var(--bg);border-radius:10px}
+.item .mini button{width:30px;height:32px;font-size:18px;color:var(--ink);display:flex;align-items:center;justify-content:center}
+.item .mini span{min-width:20px;text-align:center;font-weight:700;font-size:13px;font-family:'Space Grotesk'}
+.item .del{font-size:11px;color:var(--ink-3);font-weight:600}
+
+.sheet-foot{padding:14px 20px 4px;border-top:1px solid var(--line)}
+.tot{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:14px}
+.tot .lbl{font-size:14px;color:var(--ink-2);font-weight:500}
+.tot .val{font-family:'Space Grotesk';font-weight:700;font-size:24px;letter-spacing:-.02em}
+.checkout{
+  width:100%;height:56px;border-radius:16px;background:var(--grad);color:#fff;
+  font-weight:700;font-size:16px;display:flex;align-items:center;justify-content:center;gap:9px;
+  transition:.15s;
+}
+.checkout:active{transform:scale(.985);filter:brightness(1.05)}
+.hint{text-align:center;font-size:11px;color:var(--ink-3);margin:10px 0 0}
+
+.empty{padding:60px 20px;text-align:center;color:var(--ink-3)}
+.empty .ic{font-size:40px;margin-bottom:10px}
+.empty p{font-size:14px;margin:0}
+
+/* toast */
+.toast{
+  position:fixed;left:50%;bottom:100px;transform:translate(-50%,20px);
+  background:var(--ink);color:#fff;padding:12px 18px;border-radius:12px;
+  font-size:13px;font-weight:600;z-index:90;opacity:0;pointer-events:none;
+  transition:.28s;box-shadow:var(--shadow);max-width:88vw;text-align:center;
+}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="brand">
+    <div>
+      <h1 id="brandName">E-BORA<span class="dot">.</span></h1>
+      <small id="brandSub">техника Dyson</small>
+    </div>
+    <div class="lang" id="langSwitch">
+      <button data-l="ru">RU</button>
+      <button data-l="uz">UZ</button>
+    </div>
+  </div>
+  <div class="cats" id="cats"></div>
+</header>
+
+<main class="grid" id="grid"></main>
+
+<!-- Cart FAB -->
+<button class="fab" id="fab">
+  <div class="l">
+    <div class="badge" id="fabBadge">0</div>
+    <div class="txt" id="fabTxt">Корзина</div>
+  </div>
+  <div class="go" id="fabSum">0</div>
+</button>
+
+<!-- Cart sheet -->
+<div class="scrim" id="scrim"></div>
+<div class="sheet" id="sheet">
+  <div class="grab"></div>
+  <div class="sheet-head">
+    <h2 id="sheetTitle">Корзина</h2>
+    <button class="clear" id="clearBtn">Очистить</button>
+  </div>
+  <div class="items" id="items"></div>
+  <div class="sheet-foot" id="foot">
+    <div class="tot">
+      <span class="lbl" id="totLbl">Итого</span>
+      <span class="val" id="totalVal">0</span>
+    </div>
+    <button class="checkout" id="checkout">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M21.5 2.5 2 10l6.5 2.5M21.5 2.5 16 21l-4.5-8m10-10.5L11.5 13" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span id="checkoutTxt">Оформить у менеджера</span>
+    </button>
+    <p class="hint" id="hintTxt">Отправим ваш заказ менеджеру — он подтвердит наличие, цену и доставку.</p>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   1) НАСТРОЙКИ — редактируй здесь
+   ============================================================ */
+const CONFIG = {
+  storeName:    'E-BORA',               // название
+  storeSub:     'техника Dyson',        // подпись под названием
+  managerUser:  'eborauz_Admin',        // @username менеджера БЕЗ @
+  currency:     'сум',
+  useSendData:  false                    // true = слать заказ боту через sendData (нужен бэкенд)
+};
+
+/* ============================================================
+   2) КАТАЛОГ — реальные товары и фото с dyson-uzbekistan.uz
+   price: null = «цена по запросу» (менеджер уточнит).
+   Чтобы показать цену — впиши число, напр. price: 9900000.
+   ============================================================ */
+const IMG = 'https://admin.dyson-uzbekistan.uz/media/images/';
+const PRODUCTS = [
+  // --- Пылесосы (Dyson Detect™) ---
+  {id:'v16',    cat:'Пылесосы', name:'Dyson V16 Piston Animal',            spec:{ru:'Флагман: до 315 AW, HEPA',uz:'Flagman: 315 AW gacha, HEPA'},            price:null, image:IMG+'sale.max-280x280.format-webp.webp'},
+  {id:'gen5',   cat:'Пылесосы', name:'Dyson Gen5detect Absolute',          spec:{ru:'До 70 мин, Fluffy Optic™',uz:'70 daqiqagacha, Fluffy Optic™'},            price:null, image:IMG+'1_bLgY0S6.max-280x280.format-webp.webp'},
+  {id:'v15',    cat:'Пылесосы', name:'Dyson V15 Detect Absolute',          spec:{ru:'Лазерная подсветка пыли, LCD',uz:'Changni lazer bilan ko\'rsatadi, LCD'},        price:null, image:IMG+'IMAGE_2025-12-08_183254.max-280x280.format-webp.webp'},
+  {id:'v15sub', cat:'Пылесосы', name:'Dyson V15 Detect Submarine',         spec:{ru:'Сухая + влажная уборка',uz:'Quruq va nam tozalash'},              price:null, image:IMG+'1_0Mkbe4D.max-280x280.format-webp.webp'},
+  {id:'v12',    cat:'Пылесосы', name:'Dyson V12 Detect Slim Absolute',     spec:{ru:'Лёгкий (~2,2 кг), пьезосенсор',uz:'Yengil (~2,2 kg), pyezosensor'},       price:null, image:IMG+'1_zwULz1N.max-280x280.format-webp.webp'},
+  {id:'v12s',   cat:'Пылесосы', name:'Dyson V12s Detect Slim Submarine™',  spec:{ru:'Slim + насадка влажной уборки',uz:'Slim + nam tozalash uchun nasadka'},       price:null, image:IMG+'1_ATx1gTo.max-280x280.format-webp.webp'},
+  {id:'v10',    cat:'Пылесосы', name:'Dyson Cyclone V10 Absolute',         spec:{ru:'Проверенная классика, до 60 мин',uz:'Ishonchli klassika, 60 daqiqagacha'},     price:null, image:IMG+'IMG_6161.max-280x280.format-webp.webp'},
+  {id:'v10sub', cat:'Пылесосы', name:'Dyson Cyclone V10 Submarine™',       spec:{ru:'V10 с влажной уборкой',uz:'Nam tozalashli V10'},               price:null, image:IMG+'Bazaart_B813D5DD-2AAE-4A9B-9AE3.max-280x280.format-webp.webp'},
+
+  // --- Фены (Supersonic™) ---
+  {id:'sup',    cat:'Фены', name:'Dyson Supersonic HD07 (Prussian Blue / Rich Copper)', spec:{ru:'Сушка без экстремального нагрева',uz:'Haddan tashqari qizdirmasdan quritadi'}, price:null, image:IMG+'Bazaart_A2F14C22-7F64-473A-9D0F.max-280x280.format-webp.webp'},
+  {id:'nural',  cat:'Фены', name:'Dyson Supersonic Nural™ (Prussian Blue / Rich Copper)', spec:{ru:'Датчик расстояния, защита кожи головы',uz:'Masofa sensori, bosh terisini himoya qiladi'}, price:null, image:IMG+'1_1T8k8nM.max-280x280.format-webp.webp'},
+  {id:'nuralap',cat:'Фены', name:'Dyson Supersonic Nural™ (Ceramic Apricot / Topaz)', spec:{ru:'Умный фен, авто-режимы',uz:'Aqlli fen, avtomatik rejimlar'},        price:null, image:IMG+'1.png.max-280x280.format-webp.webp'},
+  {id:'supr',   cat:'Фены', name:'Dyson Supersonic r™ (Jasper Plum Edition)', spec:{ru:'Профессиональный, ~325 г',uz:'Professional, ~325 g'},           price:null, image:IMG+'1_eLAuNd9.max-280x280.format-webp.webp'},
+
+  // --- Airwrap™ ---
+  {id:'awjp',   cat:'Airwrap', name:'Dyson Airwrap Co-anda2x™ Straight+Wavy (Jasper Plum)', spec:{ru:'Coanda 2.0, Bluetooth',uz:'Coanda 2.0, Bluetooth'}, price:null, image:IMG+'1_R9izyJr.max-280x280.format-webp.webp'},
+  {id:'awsb',   cat:'Airwrap', name:'Dyson Airwrap Co-anda2x™ Straight+Wavy (Sakura Blush)', spec:{ru:'Coanda 2.0, Bluetooth',uz:'Coanda 2.0, Bluetooth'}, price:null, image:IMG+'1_5Mcmvti.max-280x280.format-webp.webp'},
+  {id:'awrv',   cat:'Airwrap', name:'Dyson Airwrap Co-anda2x™ Straight+Wavy (Red Velvet / Gold)', spec:{ru:'Coanda 2.0',uz:'Coanda 2.0'},      price:null, image:IMG+'1_NEizzkW.max-280x280.format-webp.webp'},
+  {id:'awid',   cat:'Airwrap', name:'Dyson Airwrap™ ID HS08 Complete Long (Red Velvet / Gold)', spec:{ru:'6 насадок, футляр',uz:'6 ta nasadka, g\'ilof'}, price:null, image:IMG+'Bazaart_CF7D2B14-8B8C-413C-A493.max-280x280.format-webp.webp'},
+  {id:'awap',   cat:'Airwrap', name:'Dyson HS08 i.d. Straight+Wavy (Ceramic Apricot / Topaz)', spec:{ru:'MyDyson™ App',uz:'MyDyson™ ilovasi'},       price:null, image:IMG+'1_SwCftMf.max-280x280.format-webp.webp'},
+
+  // --- Airstrait™ ---
+  {id:'ascp',   cat:'Airstrait', name:'Dyson Airstrait™ (Ceramic Pink / Rose Gold)',    spec:{ru:'Выпрямление влажных волос',uz:'Nam sochni tekislaydi'},  price:null, image:IMG+'1_7nrwyEO.max-280x280.format-webp.webp'},
+  {id:'aspb',   cat:'Airstrait', name:'Dyson Airstrait™ (Prussian Blue / Rich Copper)', spec:{ru:'Wet/Dry + Cool mode',uz:'Wet/Dry + Cool rejimi'},        price:null, image:IMG+'1.max-280x280.format-webp_CfEVa7w.webp'},
+  {id:'asbg',   cat:'Airstrait', name:'Dyson Airstrait™ HT01 (Black / Gold)',           spec:{ru:'LCD-дисплей, авто-пауза',uz:'LCD displey, avto-pauza'},    price:null, image:IMG+'1_PXPDb6z.max-280x280.format-webp.webp'},
+
+  // --- Corrale™ ---
+  {id:'corcn',  cat:'Corrale', name:'Dyson Corrale™ (Copper / Nickel)',        spec:{ru:'Гибкие пластины, беспроводной',uz:'Egiluvchan plastinalar, simsiz'},      price:null, image:IMG+'1111.max-280x280.format-webp.webp'},
+  {id:'corf',   cat:'Corrale', name:'Dyson Corrale™ (Fuchsia / Bright Nickel)',spec:{ru:'До 30 мин без провода',uz:'30 daqiqagacha simsiz ishlaydi'},              price:null, image:IMG+'1_n9GwZWI.max-280x280.format-webp.webp'},
+
+  // --- Очистители воздуха (Purifier™) ---
+  {id:'bp04',   cat:'Очистители', name:'Dyson Purifier Big+Quiet™ Formaldehyde BP04', spec:{ru:'До 95 м², CO₂-сенсор',uz:'95 m² gacha, CO₂ sensori'},        price:null, image:IMG+'IMG_7034.max-280x280.format-webp.webp'},
+  {id:'tp12',   cat:'Очистители', name:'Dyson Purifier Cool PC2 De-NOx TP12 (White/Gold)', spec:{ru:'HEPA H13 + De-NOx',uz:'HEPA H13 + De-NOx'},      price:null, image:IMG+'1_VbIsAAy.max-280x280.format-webp.webp'},
+  {id:'ph03',   cat:'Очистители', name:'Dyson Purifier Humidify+Cool PH03',    spec:{ru:'Очистка + увлажнение',uz:'Tozalash + namlash'},               price:null, image:IMG+'1_FnZy2gc.max-280x280.format-webp.webp'},
+  {id:'tp09',   cat:'Очистители', name:'Dyson Purifier Cool Formaldehyde™ TP09', spec:{ru:'Разрушает формальдегид',uz:'Formaldegidni parchalaydi'},           price:null, image:IMG+'1_c42uuLM.max-280x280.format-webp.webp'},
+  {id:'tp07',   cat:'Очистители', name:'Dyson Purifier Cool™ TP07',            spec:{ru:'360° HEPA H13, Air Multiplier™',uz:'360° HEPA H13, Air Multiplier™'},     price:null, image:IMG+'1_eiPYX8v.max-280x280.format-webp.webp'},
+  {id:'hp10',   cat:'Очистители', name:'Dyson Purifier Hot+Cool™ Gen 1 HP10',  spec:{ru:'Очищает, греет и охлаждает',uz:'Tozalaydi, isitadi va sovutadi'},         price:null, image:IMG+'1_hNXEgEh.max-280x280.format-webp.webp'},
+];
+
+/* иконки-заглушки по категориям (line-art) */
+const ICONS = {
+  'Пылесосы':  '<circle cx="34" cy="20" r="8"/><path d="M27 15h-6a4 4 0 0 0 0 8h5M34 28v27M23 55h23l-3 7H26z"/>',
+  'Фены':      '<path d="M18 26h20l10-8v20l-10-8H18a8 8 0 0 1 0-16v0M28 42v14"/>',
+  'Airwrap':   '<path d="M32 10v10m0 0c-8 0-12 5-12 12s4 12 12 12 12-5 12-12-4-12-12-12Zm0 24v10"/>',
+  'Airstrait': '<path d="M26 10v44M38 10v44M26 10h12M26 54h12"/>',
+  'Corrale':   '<path d="M24 12 20 52m20-40 4 40M24 12h16M20 52h24"/>',
+  'Очистители':'<rect x="22" y="14" width="20" height="36" rx="10"/><path d="M28 56h8M32 22v20"/>'
+};
+/* тонкий цветовой оттенок медиа-области по категории */
+const TINT = {
+  'Пылесосы':  ['#f3e9ff','#6a1fb0'],
+  'Фены':      ['#ffe9f4','#e0006c'],
+  'Airwrap':   ['#fff0f0','#c2185b'],
+  'Airstrait': ['#f0ecff','#5b2ab0'],
+  'Corrale':   ['#ffeef7','#ad1457'],
+  'Очистители':['#e9f6ff','#0a84c8']
+};
+
+/* ============================================================
+   3) ЛОГИКА
+   ============================================================ */
+const I18N = {
+  ru: {
+    sub:'техника Dyson', all:'Все', cart:'Корзина', clear:'Очистить', total:'Итого',
+    checkout:'Оформить у менеджера',
+    hint:'Отправим ваш заказ менеджеру — он подтвердит наличие, цену и доставку.',
+    empty:'Корзина пуста', added:'Добавлено в корзину', remove:'Убрать',
+    priceLbl:'Цена', priceAsk:'уточнит менеджер', onRequest:'по запросу', itemOnRequest:'цена по запросу',
+    fabGo:'Оформить', cur:'сум',
+    copied:'Заказ скопирован — вставьте его менеджеру, если не подставился',
+    ordHead:'🛒 Новый заказ — E-Bora', ordTotal:'Итого', ordExcl:'(не считая позиций без цены)',
+    ordAskPrice:'Точную стоимость уточните, пожалуйста 🙌', ordPlease:'Оформите, пожалуйста, мой заказ 🙌',
+    cats:{'Пылесосы':'Пылесосы','Фены':'Фены','Airwrap':'Airwrap','Airstrait':'Airstrait','Corrale':'Corrale','Очистители':'Очистители'}
+  },
+  uz: {
+    sub:'Dyson texnikasi', all:'Barchasi', cart:'Savat', clear:'Tozalash', total:'Jami',
+    checkout:'Menejer orqali buyurtma berish',
+    hint:"Buyurtmangizni menejerga yuboramiz — u mavjudlik, narx va yetkazib berishni tasdiqlaydi.",
+    empty:"Savat bo'sh", added:"Savatga qo'shildi", remove:'Olib tashlash',
+    priceLbl:'Narx', priceAsk:'menejer aniqlashtiradi', onRequest:"so'rov bo'yicha", itemOnRequest:"narx so'rov bo'yicha",
+    fabGo:'Buyurtma', cur:"so'm",
+    copied:"Buyurtma nusxalandi — agar matn o'zi chiqmasa, uni menejerga joylashtiring",
+    ordHead:'🛒 Yangi buyurtma — E-Bora', ordTotal:'Jami', ordExcl:'(narxsiz pozitsiyalardan tashqari)',
+    ordAskPrice:"Aniq narxini aytib yuborsangiz 🙌", ordPlease:"Buyurtmamni rasmiylashtirib bersangiz 🙌",
+    cats:{'Пылесосы':'Changyutgichlar','Фены':'Fenlar','Airwrap':'Airwrap','Airstrait':'Airstrait','Corrale':'Corrale','Очистители':'Havo tozalagichlar'}
+  }
+};
+const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
+let lang = (function(){
+  try{ const s=localStorage.getItem('ebora_lang'); if(s==='ru'||s==='uz') return s; }catch(e){}
+  try{ const lc=tg && tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.language_code;
+       if(lc && lc.toLowerCase().startsWith('uz')) return 'uz'; }catch(e){}
+  return 'ru';
+})();
+function t(k){ return I18N[lang][k]; }
+function catName(c){ return c==='Все' ? t('all') : (I18N[lang].cats[c]||c); }
+const fmt = n => n.toLocaleString('ru-RU');
+const money = n => fmt(n) + ' ' + t('cur');
+const $ = s => document.querySelector(s);
+
+let activeCat = 'Все';
+let cart = load();
+
+function load(){ try{ return JSON.parse(localStorage.getItem('dyson_cart')||'{}'); }catch(e){ return {}; } }
+function save(){ try{ localStorage.setItem('dyson_cart', JSON.stringify(cart)); }catch(e){} }
+function haptic(t){ try{ tg && tg.HapticFeedback && tg.HapticFeedback.impactOccurred(t||'light'); }catch(e){} }
+
+function categories(){
+  const set = ['Все'];
+  PRODUCTS.forEach(p=>{ if(!set.includes(p.cat)) set.push(p.cat); });
+  return set;
+}
+function placeholder(cat){
+  const [bg,stroke] = TINT[cat] || ['#eee','#999'];
+  return `<svg class="ph" viewBox="0 0 64 64" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+    <defs><radialGradient id="g_${cat.replace(/\s/g,'')}" cx="50%" cy="38%" r="70%">
+      <stop offset="0%" stop-color="${bg}"/><stop offset="100%" stop-color="#ffffff"/>
+    </radialGradient></defs>
+    <rect width="64" height="64" fill="url(#g_${cat.replace(/\s/g,'')})"/>
+    <g fill="none" stroke="${stroke}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" opacity=".85">${ICONS[cat]||''}</g>
+  </svg>`;
+}
+function imgSrc(p){ return p.image || `images/${p.id}.jpg`; }
+// Качество: сперва крупный рендер CDN (1000px), затем миниатюра (280px),
+// затем локальный файл images/<id>.jpg, затем заглушка.
+function layer(p){
+  const small = imgSrc(p);
+  const big = small.includes('max-280x280') ? small.replace('max-280x280','max-1000x1000') : small;
+  const chain = big===small
+    ? `if(!this.dataset.f){this.dataset.f=1;this.src='images/${p.id}.jpg';}else{this.remove();}`
+    : `if(!this.dataset.f){this.dataset.f=1;this.src='${small}';}else if(this.dataset.f==1){this.dataset.f=2;this.src='images/${p.id}.jpg';}else{this.remove();}`;
+  return placeholder(p.cat) +
+    `<img src="${big}" alt="${p.name}" loading="lazy" referrerpolicy="no-referrer" onerror="${chain}">`;
+}
+function mediaHTML(p){
+  return `<div class="media"><span class="tag">${catName(p.cat)}</span>${layer(p)}</div>`;
+}
+
+/* ---- render catalog ---- */
+function renderCats(){
+  $('#cats').innerHTML = categories().map(c=>
+    `<button class="chip ${c===activeCat?'active':''}" data-cat="${c}">${catName(c)}</button>`
+  ).join('');
+  $('#cats').querySelectorAll('.chip').forEach(el=>{
+    el.onclick=()=>{ activeCat=el.dataset.cat; haptic('light'); renderCats(); renderGrid(); window.scrollTo({top:0,behavior:'smooth'}); };
+  });
+}
+function renderGrid(){
+  const list = PRODUCTS.filter(p=> activeCat==='Все' || p.cat===activeCat);
+  $('#grid').innerHTML = list.map(p=>{
+    const q = cart[p.id]||0;
+    const ctrl = q>0
+      ? `<div class="step" data-id="${p.id}"><button data-a="minus">–</button><span>${q}</span><button data-a="plus">+</button></div>`
+      : `<button class="add" data-id="${p.id}" data-a="add">+</button>`;
+    return `<article class="card">
+      ${mediaHTML(p)}
+      <div class="body">
+        <div class="name">${p.name}</div>
+        <div class="spec">${p.spec[lang]}</div>
+        <div class="row">
+          <div class="price">${p.price?fmt(p.price):t('priceLbl')}<small>${p.price?t('cur'):t('priceAsk')}</small></div>
+          ${ctrl}
+        </div>
+      </div>
+    </article>`;
+  }).join('');
+  bindGrid();
+}
+function bindGrid(){
+  $('#grid').querySelectorAll('[data-a="add"]').forEach(b=> b.onclick=()=>{ addItem(b.dataset.id); });
+  $('#grid').querySelectorAll('.step').forEach(s=>{
+    const id=s.dataset.id;
+    s.querySelector('[data-a="plus"]').onclick=()=>changeQty(id,1);
+    s.querySelector('[data-a="minus"]').onclick=()=>changeQty(id,-1);
+  });
+}
+
+/* ---- cart ops ---- */
+function addItem(id){ cart[id]=(cart[id]||0)+1; haptic('medium'); after(); toast(t('added')); }
+function changeQty(id,d){
+  cart[id]=(cart[id]||0)+d;
+  if(cart[id]<=0) delete cart[id];
+  haptic('light'); after();
+}
+function removeItem(id){ delete cart[id]; haptic('rigid'); after(); }
+function clearCart(){ cart={}; haptic('rigid'); after(); if(!count()) closeCart(); }
+function count(){ return Object.values(cart).reduce((a,b)=>a+b,0); }
+function total(){ return Object.entries(cart).reduce((s,[id,q])=>{ const p=PRODUCTS.find(x=>x.id===id); return s + (p&&p.price?p.price*q:0); },0); }
+function hasUnpriced(){ return Object.keys(cart).some(id=>{ const p=PRODUCTS.find(x=>x.id===id); return p && !p.price; }); }
+
+function after(){ save(); renderGrid(); renderCart(); syncFab(); }
+
+/* ---- FAB ---- */
+function syncFab(){
+  const n=count(), fab=$('#fab');
+  if(n>0){ fab.classList.add('show'); $('#fabBadge').textContent=n; $('#fabSum').textContent = total()>0 ? money(total()) + (hasUnpriced()?' +':'') : t('fabGo'); }
+  else fab.classList.remove('show');
+}
+
+/* ---- cart sheet ---- */
+function renderCart(){
+  const entries=Object.entries(cart);
+  const items=$('#items');
+  if(!entries.length){
+    items.innerHTML=`<div class="empty"><div class="ic">🛒</div><p>${t('empty')}</p></div>`;
+    $('#foot').style.display='none';
+    return;
+  }
+  $('#foot').style.display='block';
+  items.innerHTML=entries.map(([id,q])=>{
+    const p=PRODUCTS.find(x=>x.id===id); if(!p) return '';
+    return `<div class="item">
+      <div class="thumb">${layer(p)}</div>
+      <div class="info">
+        <div class="n">${p.name}</div>
+        <div class="p">${p.price?money(p.price*q):t('itemOnRequest')}</div>
+      </div>
+      <div class="ctrl">
+        <div class="mini" data-id="${id}"><button data-a="minus">–</button><span>${q}</span><button data-a="plus">+</button></div>
+        <button class="del" data-del="${id}">${t('remove')}</button>
+      </div>
+    </div>`;
+  }).join('');
+  $('#totalVal').textContent = total()>0 ? money(total()) + (hasUnpriced()?' +':'') : t('onRequest');
+  items.querySelectorAll('.mini').forEach(m=>{
+    const id=m.dataset.id;
+    m.querySelector('[data-a="plus"]').onclick=()=>changeQty(id,1);
+    m.querySelector('[data-a="minus"]').onclick=()=>changeQty(id,-1);
+  });
+  items.querySelectorAll('[data-del]').forEach(b=> b.onclick=()=>removeItem(b.dataset.del));
+}
+function openCart(){
+  if(!count()) return;
+  renderCart(); $('#scrim').classList.add('open'); $('#sheet').classList.add('open');
+  haptic('light'); if(tg && tg.BackButton){ tg.BackButton.show(); }
+}
+function closeCart(){
+  $('#scrim').classList.remove('open'); $('#sheet').classList.remove('open');
+  if(tg && tg.BackButton){ tg.BackButton.hide(); }
+}
+
+/* ---- checkout → менеджер ---- */
+function buildOrderText(){
+  const lines=[t('ordHead'), ''];
+  Object.entries(cart).forEach(([id,q])=>{
+    const p=PRODUCTS.find(x=>x.id===id); if(!p) return;
+    lines.push(`• ${p.name} × ${q}` + (p.price?` — ${money(p.price*q)}`:''));
+  });
+  lines.push('');
+  if(total()>0) lines.push(`${t('ordTotal')}: ${money(total())}` + (hasUnpriced()?' '+t('ordExcl'):''));
+  lines.push(hasUnpriced() ? t('ordAskPrice') : t('ordPlease'));
+  return lines.join('\n');
+}
+function checkout(){
+  if(!count()) return;
+  haptic('medium');
+  const text=buildOrderText();
+
+  // Вариант 1: отправка боту (нужен бэкенд бота)
+  if(CONFIG.useSendData && tg && tg.sendData){
+    tg.sendData(JSON.stringify({type:'order', items:cart, total:total(), text}));
+    return;
+  }
+
+  // Вариант 2 (по умолчанию): открыть чат менеджера с готовым текстом заказа
+  copy(text);
+  const url=`https://t.me/${CONFIG.managerUser}?text=${encodeURIComponent(text)}`;
+  if(tg && tg.openTelegramLink){ tg.openTelegramLink(url); }
+  else { window.open(url,'_blank'); }
+  toast(t('copied'));
+}
+function copy(t){
+  try{ navigator.clipboard && navigator.clipboard.writeText(t); }catch(e){}
+}
+
+/* ---- toast ---- */
+let toastT;
+function toast(msg){
+  const el=$('#toast'); el.textContent=msg; el.classList.add('show');
+  clearTimeout(toastT); toastT=setTimeout(()=>el.classList.remove('show'),1800);
+}
+
+/* ---- init ---- */
+function applyLang(){
+  document.documentElement.lang = lang;
+  $('#brandSub').textContent = t('sub');
+  $('#fabTxt').textContent = t('cart');
+  $('#sheetTitle').textContent = t('cart');
+  $('#clearBtn').textContent = t('clear');
+  $('#totLbl').textContent = t('total');
+  $('#checkoutTxt').textContent = t('checkout');
+  $('#hintTxt').textContent = t('hint');
+  $('#langSwitch').querySelectorAll('button').forEach(b=>b.classList.toggle('active', b.dataset.l===lang));
+  renderCats(); renderGrid(); renderCart(); syncFab();
+}
+function setLang(l){
+  if(l===lang) return;
+  lang=l; try{ localStorage.setItem('ebora_lang', l); }catch(e){}
+  haptic('light'); applyLang();
+}
+function init(){
+  $('#brandName').innerHTML = CONFIG.storeName + '<span class="dot">.</span>';
+  $('#langSwitch').querySelectorAll('button').forEach(b=> b.onclick=()=>setLang(b.dataset.l));
+  applyLang();
+
+  $('#fab').onclick=openCart;
+  $('#scrim').onclick=closeCart;
+  $('#clearBtn').onclick=clearCart;
+  $('#checkout').onclick=checkout;
+
+  if(tg){
+    try{
+      tg.ready(); tg.expand();
+      if(tg.setHeaderColor) tg.setHeaderColor('#f4f4f6');
+      if(tg.setBackgroundColor) tg.setBackgroundColor('#f4f4f6');
+      if(tg.BackButton){ tg.BackButton.onClick(closeCart); }
+    }catch(e){}
+  }
+}
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
